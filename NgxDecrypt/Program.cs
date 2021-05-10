@@ -12,10 +12,11 @@ namespace NgxDecrypt
             if (args.Length != 3)
             {
                 Console.Error.WriteLine("Usage: NgxDecrypt <pack|unpack> <inPath> <outPath>");
-                Console.Error.WriteLine("pack\tEncrypts ROMs and prepares game card.");
-                Console.Error.WriteLine("unpack\tDecrypts ROMs from game card.");
-                Console.Error.WriteLine("inPath\tInput path");
-                Console.Error.WriteLine("outPath\tOutput path");
+                Console.Error.WriteLine();
+                Console.Error.WriteLine("\tpack\tEncrypts ROMs and prepares game card.");
+                Console.Error.WriteLine("\tunpack\tDecrypts ROMs from game card.");
+                Console.Error.WriteLine("\tinPath\tInput path");
+                Console.Error.WriteLine("\toutPath\tOutput path");
                 Environment.Exit(-1);
             }
 
@@ -190,7 +191,7 @@ namespace NgxDecrypt
             StreamReader sr = new StreamReader(stream);
             while (!sr.EndOfStream)
             {
-                string line = sr.ReadLine().Trim();
+                string line = sr.ReadLine();
                 int commentIndex = line.IndexOf('#');
                 if (commentIndex != -1)
                     line = line.Substring(0, commentIndex);
