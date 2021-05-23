@@ -53,6 +53,7 @@ namespace NgxDecrypt
             int numRoms = 0;
             List<string> romHashes = new List<string>();
             List<string> heavensRoadHashes = new List<string>();
+            List<string> romFileNames = new List<string>();
 
             // Encrypt all ROMs
             while (true)
@@ -63,6 +64,7 @@ namespace NgxDecrypt
                     fileName = Path.ChangeExtension(fileName, ".mvs");
                     if (!File.Exists(Path.Combine(inPath, fileName))) break;
                 }
+                romFileNames.Add(fileName);
 
                 string thumbName = $"game{numRoms + 1}.png";
                 if (!File.Exists(Path.Combine(inPath, thumbName)))
@@ -107,9 +109,13 @@ namespace NgxDecrypt
             byte[] configBytes;
             using (MemoryStream ms = new MemoryStream())
             {
-                StreamWriter sw = new StreamWriter(ms);
+                StreamWriter sw = new StreamWriter(ms) { NewLine = "\n" };
                 sw.WriteLine("card_game_work_path=/mnt/mmc/card_game/");
                 sw.WriteLine($"card_game_number={numRoms}");
+                for (int i = 0; i < numRoms; ++i)
+                {
+                    sw.WriteLine($"game{i + 1}.png=/mnt/mmc/card_game/{romFileNames[i]}");
+                }
                 sw.Flush();
                 configBytes = ms.ToArray();
             }

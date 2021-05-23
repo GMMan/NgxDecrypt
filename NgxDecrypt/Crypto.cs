@@ -25,10 +25,10 @@ namespace NgxDecrypt
                 key = (byte[])key.Clone();
                 Array.Resize(ref key, MAX_KEY_LENGTH);
             }
-            byte[] output = (byte[])data.Clone();
+            byte[] output = new byte[data.Length];
             for (int i = 0; i < output.Length; ++i)
             {
-                output[i] ^= key[key.Length - 1 - i % key.Length];
+                output[i] = (byte)(data[i] ^ key[key.Length - 1 - (i % key.Length)]);
             }
             return output;
         }
