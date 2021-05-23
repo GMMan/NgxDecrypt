@@ -30,6 +30,17 @@ namespace NgxDecrypt
             }
         }
 
+        public void Write(BinaryWriter bw)
+        {
+            bw.Write(Version);
+            bw.Write((Name.PadRight(12, '\0')).ToCharArray());
+            foreach (var block in Blocks)
+            {
+                bw.Write(block.Offset);
+                bw.Write((block.Description.PadRight(12, '\0')).ToCharArray());
+            }
+        }
+
         string ReadString(BinaryReader br, int blockLength)
         {
             string str = new string(br.ReadChars(blockLength));

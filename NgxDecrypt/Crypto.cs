@@ -144,7 +144,22 @@ namespace NgxDecrypt
                 int keyLength;
                 byte[] keyData = GetNgxRomKey(br, unencryptedStart, unencryptedEnd, out keyLength);
 
-                CryptNgxRom(fs, null, keyData, keyLength);
+                BurnCacheHeader header = null;
+                CryptNgxRom(fs, ref header, keyData, keyLength);
+
+                // Swap sprite and text blocks
+                BinaryWriter bw = new BinaryWriter(fs);
+                fs.Seek(header.Blocks[1].Offset, SeekOrigin.Begin);
+                byte[] textBlock = br.ReadBytes((int)header.GetLength(1));
+                byte[] spriteBlock = br.ReadBytes((int)header.GetLength(2));
+                fs.Seek(header.Blocks[1].Offset, SeekOrigin.Begin);
+                bw.Write(spriteBlock);
+                header.Blocks[2].Offset = (uint)fs.Position;
+                bw.Write(textBlock);
+
+                // Update header
+                fs.Seek(0, SeekOrigin.Begin);
+                header.Write(bw);
 
                 fs.SetLength(fs.Length - 8);
             }
@@ -156,17 +171,31 @@ namespace NgxDecrypt
             using (var fs = File.Open(outPath, FileMode.Open, FileAccess.ReadWrite))
             {
                 BinaryReader br = new BinaryReader(fs);
+                BinaryWriter bw = new BinaryWriter(fs);
                 BurnCacheHeader header = new BurnCacheHeader();
                 header.Read(br);
+
+                // Swap sprite and text blocks
+                fs.Seek(header.Blocks[1].Offset, SeekOrigin.Begin);
+                byte[] spriteBlock = br.ReadBytes((int)header.GetLength(1));
+                byte[] textBlock = br.ReadBytes((int)header.GetLength(2));
+                fs.Seek(header.Blocks[1].Offset, SeekOrigin.Begin);
+                bw.Write(textBlock);
+                header.Blocks[2].Offset = (uint)fs.Position;
+                bw.Write(spriteBlock);
+
+                // Update header
+                fs.Seek(0, SeekOrigin.Begin);
+                header.Write(bw);
+
                 // Unencrypted region (Sprite (1) and Text (2))
                 var unencryptedStart = (int)header.Blocks[1].Offset;
                 var unencryptedEnd = (int)(header.Blocks[2].Offset + header.GetLength(2));
                 int keyLength;
                 byte[] keyData = GetNgxRomKey(br, unencryptedStart, unencryptedEnd, out keyLength);
 
-                CryptNgxRom(fs, header, keyData, keyLength);
+                CryptNgxRom(fs, ref header, keyData, keyLength);
 
-                BinaryWriter bw = new BinaryWriter(fs);
                 fs.Seek(0, SeekOrigin.End);
                 bw.Write(unencryptedStart ^ 0x12345678);
                 bw.Write(unencryptedEnd ^ 0x12345678);
@@ -191,7 +220,7 @@ namespace NgxDecrypt
             return keyData;
         }
 
-        static void CryptNgxRom(Stream fs, BurnCacheHeader header, byte[] keyData, int keyLength)
+        static void CryptNgxRom(Stream fs, ref BurnCacheHeader header, byte[] keyData, int keyLength)
         {
             BinaryReader br = new BinaryReader(fs);
             BinaryWriter bw = new BinaryWriter(fs);
